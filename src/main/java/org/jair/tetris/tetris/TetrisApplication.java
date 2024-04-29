@@ -10,6 +10,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
+import java.sql.Time;
 import java.util.Random;
 
 import static com.almasb.fxgl.dsl.FXGLForKtKt.getGameScene;
@@ -19,6 +20,9 @@ public class TetrisApplication extends GameApplication {
 
     private static final int BOARD_WIDTH = 10;
     private static final int BOARD_HEIGHT = 20;
+
+    private Timeline moveRightTimeline;
+    private Timeline moveLeftTimeline;
 
     private static int currentPieceX;
     private static int currentPieceY;
@@ -115,42 +119,66 @@ public class TetrisApplication extends GameApplication {
 
     @Override
     protected void initInput() {
+        moveRightTimeline = new Timeline(new KeyFrame(Duration.millis(200), e -> movePiece(1)));
+        moveRightTimeline.setCycleCount(Timeline.INDEFINITE);
+
+        moveLeftTimeline = new Timeline(new KeyFrame(Duration.millis(200), e -> movePiece(-1)));
+        moveLeftTimeline.setCycleCount(Timeline.INDEFINITE);
+
         getInput().addAction(new UserAction("Move Right") {
             @Override
-            protected void onAction() {
-                for (int i = 0; i < currentPiece.length; i++) {
-                    for (int j = currentPiece[i].length - 1; j >= 0; j--) {
-                        if (currentPiece[i][j] != 0) {
-                            // Verifica si la pieza ha llegado al borde derecho del tablero
-                            if (currentPieceX + j + 1 >= BOARD_WIDTH || board[currentPieceY + i][currentPieceX + j + 1] != 0) {
-                                return;
-                            }
-                        }
-                    }
-                }
-                // Si la pieza puede moverse a la derecha, actualiza su posición X
-                currentPieceX++;
-                drawPiece();
+            protected void onActionBegin() {
+                movePiece(1);
+                moveRightTimeline.play();
             }
+
+            @Override
+            protected void onActionEnd() {
+                moveRightTimeline.stop();
+            }
+
+//            @Override
+//            protected void onAction() {
+//                movePiece(1);
+//
+//            }
         }, KeyCode.RIGHT);
         getInput().addAction(new UserAction("Move Left") {
             @Override
-            protected void onAction() {
-                for (int i = 0; i < currentPiece.length; i++) {
-                    for (int j = 0; j < currentPiece[i].length; j++) {
-                        if (currentPiece[i][j] != 0) {
-                            // Verifica si la pieza ha llegado al borde izquierdo del tablero
-                            if (currentPieceX + j - 1 < 0 || board[currentPieceY + i][currentPieceX + j - 1] != 0) {
-                                return;
-                            }
-                        }
+            protected void onActionBegin() {
+                movePiece(-1);
+                moveLeftTimeline.play();
+            }
+            @Override
+            protected void onActionEnd() {
+                moveLeftTimeline.stop();
+
+            }
+
+//            @Override
+//            protected void onAction() {
+//                movePiece(-1);
+//            }
+        }, KeyCode.LEFT);
+    }
+
+    private void movePiece(int direction)
+    {
+        for(int i = 0; i < currentPiece.length;i++)
+        {
+            for(int j = (direction > 0) ? currentPiece[i].length - 1 : 0; (direction > 0) ? j >= 0 : j < currentPiece[i].length;j-=direction)
+            {
+                if(currentPiece[i][j] != 0)
+                {
+                    if(currentPieceX + j + direction >= BOARD_WIDTH || currentPieceX + j + direction < 0 || board[currentPieceY + i][currentPieceX + j + direction] != 0)
+                    {
+                        return;
                     }
                 }
-                // Si la pieza puede moverse a la izquierda, actualiza su posición X
-                currentPieceX--;
-                drawPiece();
             }
-        }, KeyCode.LEFT);
+        }
+        currentPieceX += direction;
+        drawPiece();
     }
 
     @Override
