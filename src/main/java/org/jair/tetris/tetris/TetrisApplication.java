@@ -24,6 +24,8 @@ public class TetrisApplication extends GameApplication {
     private Timeline moveRightTimeline;
     private Timeline moveLeftTimeline;
 
+
+
     private static int currentPieceX;
     private static int currentPieceY;
 
@@ -154,12 +156,49 @@ public class TetrisApplication extends GameApplication {
                 moveLeftTimeline.stop();
 
             }
-
-//            @Override
-//            protected void onAction() {
-//                movePiece(-1);
-//            }
         }, KeyCode.LEFT);
+
+        getInput().addAction(new UserAction("Move Down") {
+            @Override
+            protected void onAction() {
+                movePieceDown();
+            }
+        }, KeyCode.DOWN);
+        getInput().addAction(new UserAction("Rotate") {
+            @Override
+            protected void onActionBegin() {
+                rotatePiece();
+            }
+            @Override
+            protected void onActionEnd()
+            {
+                rotatePiece();
+            }
+        }, KeyCode.UP);
+    }
+
+    private void rotatePiece()
+    {
+        int[][] rotatedPiece = new int[currentPiece[0].length][currentPiece.length];
+        for(int i = 0; i < currentPiece.length; i++)
+        {
+            for(int j = 0; j < currentPiece[i].length; j++)
+            {
+                rotatedPiece[j][currentPiece.length - 1 - i] = currentPiece[i][j];
+            }
+        }
+        for(int i = 0; i < rotatedPiece.length; i++)
+        {
+            for(int j = 0; j < rotatedPiece[i].length; j++)
+            {
+                if(currentPieceX + j >= BOARD_WIDTH || currentPieceY + i >= BOARD_HEIGHT || currentPieceX + j < 0 || currentPieceY + i < 0 || board[currentPieceY + i][currentPieceX + j] != 0)
+                {
+                    return;
+                }
+            }
+        }
+        currentPiece = rotatedPiece;
+        drawPiece();
     }
 
     private void movePiece(int direction)
@@ -178,6 +217,25 @@ public class TetrisApplication extends GameApplication {
             }
         }
         currentPieceX += direction;
+        drawPiece();
+    }
+
+    private void movePieceDown()
+    {
+        for(int i = 0; i < currentPiece.length;i++)
+        {
+            for(int j = 0; j < currentPiece[i].length;j++)
+            {
+                if(currentPiece[i][j] != 0)
+                {
+                    if(currentPieceY + i + 1 >= BOARD_HEIGHT || board[currentPieceY + i + 1][currentPieceX + j] != 0)
+                    {
+                        return;
+                    }
+                }
+            }
+        }
+        currentPieceY++;
         drawPiece();
     }
 
